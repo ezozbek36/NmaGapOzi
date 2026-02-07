@@ -21,13 +21,13 @@ in
     DART_ROOT = "${FLUTTER_ROOT}/bin/cache/dart-sdk";
 
     shellHook = ''
-      flutter config --no-analytics >/dev/null 2>&1 || true
-      flutter config --enable-linux-desktop >/dev/null 2>&1 || true
-      flutter config --no-enable-web >/dev/null 2>&1 || true
-      flutter config --no-enable-android >/dev/null 2>&1 || true
-      flutter config --no-enable-ios >/dev/null 2>&1 || true
-      flutter config --enable-macos-desktop >/dev/null 2>&1 || true
-      flutter config --enable-windows-desktop >/dev/null 2>&1 || true
-      flutter config --enable-native-assets >/dev/null 2>&1 || true
+      flutter config --no-analytics
+      flutter config --enable-linux-desktop
+      flutter config --no-enable-web
+      flutter config --no-enable-android
+      flutter config --no-enable-ios
+      flutter config --enable-macos-desktop
+      flutter config --enable-windows-desktop
+      flutter config --enable-native-assets
     '';
   }
