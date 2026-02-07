@@ -28,7 +28,7 @@ void main() async {
   final chatProvider = MockChatProvider(config: mockConfig);
 
   final container = ProviderContainer(
-    overrides: [configProvider.overrideWithValue(config), chatProviderProvider.overrideWithValue(chatProvider)],
+    overrides: [configLoaderProvider.overrideWithValue(configLoader), chatProviderProvider.overrideWithValue(chatProvider)],
   );
 
   // 3. Register slots before app starts
