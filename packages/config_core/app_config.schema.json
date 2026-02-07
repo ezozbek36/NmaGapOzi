@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "stringify": {
+      "type": "boolean"
+    },
+    "hashCode": {
+      "type": "integer"
+    },
+    "configVersion": {
+      "type": "integer",
+      "description": "Version of the config schema used for migration."
+    },
+    "ui": {
+      "$ref": "#/$defs/UiConfig",
+      "description": "Visual settings such as theme and layout."
+    },
+    "input": {
+      "$ref": "#/$defs/InputConfig",
+      "description": "Input settings such as keyboard bindings."
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/CommandConfig"
+      },
+      "description": "User-defined command metadata."
+    },
+    "provider": {
+      "$ref": "#/$defs/ProviderConfig",
+      "description": "Runtime provider selection and provider-specific settings."
+    },
+    "debug": {
+      "$ref": "#/$defs/DebugConfig",
+      "description": "Debug and diagnostics behavior toggles."
+    },
+    "props": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "hashCode",
+    "configVersion",
+    "ui",
+    "input",
+    "commands",
+    "provider",
+    "debug",
+    "props"
+  ],
+  "$defs": {
+    "ThemeConfig": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "colors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "spacing": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "fontSizes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "mode",
+        "colors",
+        "spacing",
+        "fontSizes",
+        "props"
+      ]
+    },
+    "LayoutConfig": {
+      "type": "object",
+      "properties": {
+        "showLeftSidebar": {
+          "type": "boolean"
+        },
+        "showRightSidebar": {
+          "type": "boolean"
+        },
+        "showBottomPanel": {
+          "type": "boolean"
+        },
+        "leftSidebarWidth": {
+          "type": "number"
+        },
+        "rightSidebarWidth": {
+          "type": "number"
+        },
+        "bottomPanelHeight": {
+          "type": "number"
+        },
+        "slots": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "showLeftSidebar",
+        "showRightSidebar",
+        "showBottomPanel",
+        "leftSidebarWidth",
+        "rightSidebarWidth",
+        "bottomPanelHeight",
+        "slots",
+        "props"
+      ]
+    },
+    "UiConfig": {
+      "type": "object",
+      "properties": {
+        "theme": {
+          "$ref": "#/$defs/ThemeConfig"
+        },
+        "layout": {
+          "$ref": "#/$defs/LayoutConfig"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "theme",
+        "layout",
+        "props"
+      ]
+    },
+    "KeybindingConfig": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "when": {
+          "type": "string"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "key",
+        "command",
+        "props"
+      ]
+    },
+    "InputConfig": {
+      "type": "object",
+      "properties": {
+        "keybindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/KeybindingConfig"
+          }
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "keybindings",
+        "props"
+      ]
+    },
+    "CommandConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "props"
+      ]
+    },
+    "MockProviderSettings": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "integer"
+        },
+        "conversationCount": {
+          "type": "integer"
+        },
+        "messagesPerConversation": {
+          "type": "integer"
+        },
+        "latencyMinMs": {
+          "type": "integer"
+        },
+        "latencyMaxMs": {
+          "type": "integer"
+        },
+        "failRate": {
+          "type": "number"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "seed",
+        "conversationCount",
+        "messagesPerConversation",
+        "latencyMinMs",
+        "latencyMaxMs",
+        "failRate",
+        "props"
+      ]
+    },
+    "ProviderConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "mock": {
+          "$ref": "#/$defs/MockProviderSettings"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "props"
+      ]
+    },
+    "DebugConfig": {
+      "type": "object",
+      "properties": {
+        "showInspector": {
+          "type": "boolean"
+        },
+        "showEventLog": {
+          "type": "boolean"
+        },
+        "simulateErrors": {
+          "type": "boolean"
+        },
+        "logLevel": {
+          "type": "integer"
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "showInspector",
+        "showEventLog",
+        "simulateErrors",
+        "logLevel",
+        "props"
+      ]
+    }
+  }
+}

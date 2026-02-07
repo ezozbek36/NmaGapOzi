@@ -1,0 +1,33 @@
+# NmaGapOZi Example Configuration (YAML)
+$schema: "https://raw.githubusercontent.com/ezozbek/NmaGapOS/main/app_config.schema.json"
+configVersion: 2
+
+ui:
+  theme: dark
+  compact_mode: false
+  show_debug_panel: true
+
+layout:
+  sidebar_width: 250.0
+  show_sidebar: true
+
+provider:
+  type: mock
+  settings:
+    seed: 42
+    latency_min_ms: 100
+    latency_max_ms: 500
+    failure_rate: 0.05
+
+input:
+  keybindings:
+    - command: "command_palette.open"
+      key: "ctrl+p"
+
+commands:
+  - id: "example.hello"
+    label: "Say Hello"
+
+debug:
+  log_level: debug
+  enable_hot_reload_config: true

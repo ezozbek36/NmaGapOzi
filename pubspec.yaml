@@ -1,0 +1,38 @@
+name: NmaGapOZi
+environment:
+  sdk: ">=3.10.7 <4.0.0"
+dev_dependencies:
+  melos: ^7.3.0
+workspace:
+  - apps/nma_gapp
+  - packages/app_shell
+  - packages/chat_core
+  - packages/config_core
+  - packages/provider_api
+  - packages/provider_mock
+  - packages/ui_kit
+
+melos:
+  command:
+    bootstrap:
+      enforceLockfile: true
+      runPubGetInParallel: true
+      hooks:
+        post: melos exec --depends-on="build_runner" "dart run build_runner build --delete-conflicting-outputs"
+
+  scripts:
+    analyze:
+      exec: dart analyze .
+      description: Analyze all packages
+
+    format:
+      exec: dart format --set-exit-if-changed .
+      description: Format all packages
+
+    test:
+      exec: flutter test
+      description: Run tests in all packages
+
+    build:desktop:
+      run: cd apps/nma_gapp && flutter build linux
+      description: Build desktop app for Linux
