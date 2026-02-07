@@ -10,21 +10,32 @@ class ConfigPaths {
   /// Linux: ~/.config/nmagapozi/
   /// macOS: ~/Library/Application Support/nmagapozi/
   /// Windows: %APPDATA%/nmagapozi/
-  static Future<String> getConfigDir() async {
-    if (Platform.isLinux) {
-      final configHome = Platform.environment['XDG_CONFIG_HOME'];
+  static Future<String> getConfigDir({bool? isLinux, bool? isMacOS, bool? isWindows, Map<String, String>? environment}) async {
+    final bool linux = isLinux ?? Platform.isLinux;
+    final bool macos = isMacOS ?? Platform.isMacOS;
+    final bool windows = isWindows ?? Platform.isWindows;
+    final Map<String, String> env = environment ?? Platform.environment;
+
+    if (linux) {
+      final configHome = env['XDG_CONFIG_HOME'];
       if (configHome != null && configHome.isNotEmpty) {
         return p.join(configHome, _appName);
       }
-      final home = Platform.environment['HOME'];
+      final home = env['HOME'];
       if (home != null && home.isNotEmpty) {
         return p.join(home, '.config', _appName);
       }
     }
 
-    // For macOS and Windows, getApplicationSupportDirectory gives us the standard location.
-    if (Platform.isWindows) {
-      final appData = Platform.environment['APPDATA'];
+    if (macos) {
+      final home = env['HOME'];
+      if (home != null && home.isNotEmpty) {
+        return p.join(home, 'Library', 'Application Support', _appName);
+      }
+    }
+
+    if (windows) {
+      final appData = env['APPDATA'];
       if (appData != null && appData.isNotEmpty) {
         return p.join(appData, _appName);
       }
