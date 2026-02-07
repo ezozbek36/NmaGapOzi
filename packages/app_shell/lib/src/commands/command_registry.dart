@@ -17,8 +17,8 @@ final commandRegistryProvider = Provider((ref) => CommandRegistry());
 class CommandRegistry {
   final Map<String, Command> _commands = {};
 
-  void register(Command command) {
-    if (_commands.containsKey(command.id)) {
+  void register(Command command, {bool warnOnOverwrite = true}) {
+    if (warnOnOverwrite && _commands.containsKey(command.id)) {
       debugPrint('Warning: Overwriting command ${command.id}');
     }
     _commands[command.id] = command;

@@ -25,7 +25,8 @@ class KeyResolver {
 
   static LogicalKeyboardKey? _resolveKey(String token) {
     if (token.length == 1) {
-      return _letterKeys[token.toLowerCase()];
+      final normalized = token.toLowerCase();
+      return _letterKeys[normalized] ?? _digitKeys[normalized] ?? _symbolKeys[normalized];
     }
 
     switch (token) {
@@ -38,6 +39,24 @@ class KeyResolver {
         return LogicalKeyboardKey.tab;
       case 'space':
         return LogicalKeyboardKey.space;
+      case 'comma':
+        return LogicalKeyboardKey.comma;
+      case 'period':
+      case 'dot':
+        return LogicalKeyboardKey.period;
+      case 'slash':
+        return LogicalKeyboardKey.slash;
+      case 'semicolon':
+        return LogicalKeyboardKey.semicolon;
+      case 'quote':
+      case 'apostrophe':
+        return LogicalKeyboardKey.quote;
+      case 'minus':
+      case 'dash':
+        return LogicalKeyboardKey.minus;
+      case 'equal':
+      case 'equals':
+        return LogicalKeyboardKey.equal;
       case 'up':
         return LogicalKeyboardKey.arrowUp;
       case 'down':
@@ -78,5 +97,32 @@ class KeyResolver {
     'x': LogicalKeyboardKey.keyX,
     'y': LogicalKeyboardKey.keyY,
     'z': LogicalKeyboardKey.keyZ,
+  };
+
+  static const Map<String, LogicalKeyboardKey> _digitKeys = {
+    '0': LogicalKeyboardKey.digit0,
+    '1': LogicalKeyboardKey.digit1,
+    '2': LogicalKeyboardKey.digit2,
+    '3': LogicalKeyboardKey.digit3,
+    '4': LogicalKeyboardKey.digit4,
+    '5': LogicalKeyboardKey.digit5,
+    '6': LogicalKeyboardKey.digit6,
+    '7': LogicalKeyboardKey.digit7,
+    '8': LogicalKeyboardKey.digit8,
+    '9': LogicalKeyboardKey.digit9,
+  };
+
+  static const Map<String, LogicalKeyboardKey> _symbolKeys = {
+    ',': LogicalKeyboardKey.comma,
+    '.': LogicalKeyboardKey.period,
+    '/': LogicalKeyboardKey.slash,
+    ';': LogicalKeyboardKey.semicolon,
+    "'": LogicalKeyboardKey.quote,
+    '-': LogicalKeyboardKey.minus,
+    '=': LogicalKeyboardKey.equal,
+    '[': LogicalKeyboardKey.bracketLeft,
+    ']': LogicalKeyboardKey.bracketRight,
+    '\\': LogicalKeyboardKey.backslash,
+    '`': LogicalKeyboardKey.backquote,
   };
 }
