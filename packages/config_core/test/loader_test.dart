@@ -80,6 +80,20 @@ void main() {
 
       expect(() => migrationLoader.load(), throwsA(isA<ConfigMigrationException>()));
     });
+
+    test('save() writes YAML output', () async {
+      final config = await loader.load();
+
+      await loader.save(config);
+
+      final saved = await File(configPath).readAsString();
+      expect(saved.trimLeft().startsWith('{'), isFalse);
+      expect(saved, contains('configVersion: 1'));
+      expect(saved, contains('ui:'));
+
+      final reparsed = YamlConfigParser().parse(saved);
+      expect(reparsed['configVersion'], 1);
+    });
   });
 }
 

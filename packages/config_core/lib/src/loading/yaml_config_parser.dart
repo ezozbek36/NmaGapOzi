@@ -1,11 +1,10 @@
-import 'dart:convert';
-
 import 'package:yaml/yaml.dart';
+import 'package:yaml_writer/yaml_writer.dart';
 
 import 'config_parser.dart';
 
 class YamlConfigParser implements ConfigParser {
-  static const JsonEncoder _encoder = JsonEncoder.withIndent('  ');
+  static final YamlWriter _writer = YamlWriter();
 
   @override
   Map<String, dynamic> parse(String content) {
@@ -19,7 +18,8 @@ class YamlConfigParser implements ConfigParser {
 
   @override
   String stringify(Map<String, dynamic> config) {
-    return _encoder.convert(config);
+    final yaml = _writer.write(config);
+    return yaml.endsWith('\n') ? yaml : '$yaml\n';
   }
 
   @override
