@@ -4,6 +4,9 @@ set -e
 echo "Running melos bootstrap..."
 melos bootstrap
 
+echo "Checking dependency hygiene..."
+dart run tooling/scripts/check_dependency_hygiene.dart
+
 echo "Formatting files..."
 melos run format
 

@@ -21,6 +21,10 @@ melos:
         post: melos exec --depends-on="build_runner" "dart run build_runner build --delete-conflicting-outputs"
 
   scripts:
+    deps:hygiene:
+      run: dart run tooling/scripts/check_dependency_hygiene.dart
+      description: Validate dependency style and usage
+
     analyze:
       exec: dart analyze .
       description: Analyze all packages

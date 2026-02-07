@@ -83,3 +83,9 @@ Run the following command to analyze, format, and test all packages:
 ```bash
 ./tooling/scripts/verify_all.sh
 ```
+
+### Dependency Policy
+
+- Workspace-internal packages must be declared as `any` in `dependencies`.
+- Every direct dependency must be imported by source files under `lib/`, `bin/`, or `tool/`.
+- Run `melos run deps:hygiene` (or `./tooling/scripts/verify_all.sh`) to enforce this policy.
