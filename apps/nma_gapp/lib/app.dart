@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:ui_kit/ui_kit.dart';
 import 'screens/auth_screen.dart';
-import 'wiring/slot_config.dart';
 
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
@@ -16,15 +15,6 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-  @override
-  void initState() {
-    super.initState();
-    // Register slots once
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      SlotConfig.register(ref);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final config = ref.watch(configProvider);

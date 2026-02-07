@@ -16,12 +16,22 @@ class ConfigLoader {
   final ConfigMigrator _migrator;
   final ConfigValidator _validator;
   final ConfigParser _parser;
+  final Future<String> Function() _configPathProvider;
+  final Future<String> Function() _configDirProvider;
 
-  ConfigLoader({ConfigMerger? merger, ConfigMigrator? migrator, ConfigValidator? validator, ConfigParser? parser})
-    : _merger = merger ?? ConfigMerger(),
-      _migrator = migrator ?? ConfigMigrator([]),
-      _validator = validator ?? ConfigValidator(),
-      _parser = parser ?? YamlConfigParser();
+  ConfigLoader({
+    ConfigMerger? merger,
+    ConfigMigrator? migrator,
+    ConfigValidator? validator,
+    ConfigParser? parser,
+    Future<String> Function()? configPathProvider,
+    Future<String> Function()? configDirProvider,
+  }) : _merger = merger ?? ConfigMerger(),
+       _migrator = migrator ?? ConfigMigrator([]),
+       _validator = validator ?? ConfigValidator(),
+       _parser = parser ?? YamlConfigParser(),
+       _configPathProvider = configPathProvider ?? ConfigPaths.getConfigPath,
+       _configDirProvider = configDirProvider ?? ConfigPaths.getConfigDir;
 
   /// Loads the configuration.
   ///
@@ -33,27 +43,20 @@ class ConfigLoader {
   Future<AppConfig> load({Map<String, dynamic>? runtimeOverrides}) async {
     final defaults = DefaultConfig.value;
     Map<String, dynamic>? userConfig;
+    final path = await _configPathProvider();
+    final file = File(path);
 
-    try {
-      final path = await ConfigPaths.getConfigPath();
-      final file = File(path);
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        if (content.trim().isNotEmpty) {
-          userConfig = _parser.parse(content);
-        }
+    final exists = await _safeExists(file, path);
+    if (exists) {
+      final content = await _safeRead(file, path);
+      if (content.trim().isNotEmpty) {
+        userConfig = _safeParse(content, path);
       }
-    } catch (_) {
-      // Ignore errors (missing file, permission issues, invalid YAML)
     }
 
     // Apply migrations to user config
     if (userConfig != null) {
-      try {
-        userConfig = _migrator.migrate(userConfig);
-      } catch (_) {
-        // Ignore migration errors
-      }
+      userConfig = _safeMigrate(userConfig, path);
     }
 
     final config = _merger.merge(defaults: defaults, userConfig: userConfig, runtimeOverrides: runtimeOverrides);
@@ -69,7 +72,7 @@ class ConfigLoader {
 
   /// Saves the current config to the user config file.
   Future<void> save(AppConfig config) async {
-    final path = await ConfigPaths.getConfigPath();
+    final path = await _configPathProvider();
     final file = File(path);
 
     // Ensure directory exists
@@ -85,14 +88,14 @@ class ConfigLoader {
     // Yield initial value
     yield await load();
 
-    final dirPath = await ConfigPaths.getConfigDir();
+    final dirPath = await _configDirProvider();
     final dir = Directory(dirPath);
 
     if (!await dir.exists()) {
       try {
         await dir.create(recursive: true);
-      } catch (_) {
-        return;
+      } catch (error) {
+        throw ConfigWatchException(path: dirPath, cause: error);
       }
     }
 
@@ -101,6 +104,38 @@ class ConfigLoader {
       if (_parser.supportsPath(event.path)) {
         yield await load();
       }
+    }
+  }
+
+  Future<bool> _safeExists(File file, String path) async {
+    try {
+      return await file.exists();
+    } catch (error) {
+      throw ConfigReadException(path: path, cause: error);
+    }
+  }
+
+  Future<String> _safeRead(File file, String path) async {
+    try {
+      return await file.readAsString();
+    } catch (error) {
+      throw ConfigReadException(path: path, cause: error);
+    }
+  }
+
+  Map<String, dynamic> _safeParse(String content, String path) {
+    try {
+      return _parser.parse(content);
+    } catch (error) {
+      throw ConfigParseException(path: path, cause: error);
+    }
+  }
+
+  Map<String, dynamic> _safeMigrate(Map<String, dynamic> config, String path) {
+    try {
+      return _migrator.migrate(config);
+    } catch (error) {
+      throw ConfigMigrationException(path: path, cause: error);
     }
   }
 }

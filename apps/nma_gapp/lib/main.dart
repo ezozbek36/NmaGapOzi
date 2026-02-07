@@ -3,7 +3,9 @@ import 'package:config_core/config_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:provider_mock/provider_mock.dart';
+import 'package:app_shell/app_shell.dart';
 import 'app.dart';
+import 'wiring/slot_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,10 +27,12 @@ void main() async {
 
   final chatProvider = MockChatProvider(config: mockConfig);
 
-  runApp(
-    ProviderScope(
-      overrides: [configProvider.overrideWithValue(config), chatProviderProvider.overrideWithValue(chatProvider)],
-      child: const MyApp(),
-    ),
+  final container = ProviderContainer(
+    overrides: [configProvider.overrideWithValue(config), chatProviderProvider.overrideWithValue(chatProvider)],
   );
+
+  // 3. Register slots before app starts
+  SlotConfig.register(container.read(slotRegistryProvider.notifier));
+
+  runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
