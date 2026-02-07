@@ -9,9 +9,9 @@ part of 'message_list_state.dart';
 abstract class _$MessageListStateCWProxy {
   MessageListState conversationId(String conversationId);
 
-  MessageListState items(List<Message> items);
+  MessageListState items(IList<Message> items);
 
-  MessageListState pending(List<PendingMessage> pending);
+  MessageListState pending(IList<PendingMessage> pending);
 
   MessageListState isLoading(bool isLoading);
 
@@ -30,8 +30,8 @@ abstract class _$MessageListStateCWProxy {
   /// ```
   MessageListState call({
     String conversationId,
-    List<Message> items,
-    List<PendingMessage> pending,
+    IList<Message> items,
+    IList<PendingMessage> pending,
     bool isLoading,
     bool isLoadingMore,
     bool hasMore,
@@ -51,10 +51,10 @@ class _$MessageListStateCWProxyImpl implements _$MessageListStateCWProxy {
       call(conversationId: conversationId);
 
   @override
-  MessageListState items(List<Message> items) => call(items: items);
+  MessageListState items(IList<Message> items) => call(items: items);
 
   @override
-  MessageListState pending(List<PendingMessage> pending) =>
+  MessageListState pending(IList<PendingMessage> pending) =>
       call(pending: pending);
 
   @override
@@ -97,11 +97,11 @@ class _$MessageListStateCWProxyImpl implements _$MessageListStateCWProxy {
       items: items == const $CopyWithPlaceholder() || items == null
           ? _value.items
           // ignore: cast_nullable_to_non_nullable
-          : items as List<Message>,
+          : items as IList<Message>,
       pending: pending == const $CopyWithPlaceholder() || pending == null
           ? _value.pending
           // ignore: cast_nullable_to_non_nullable
-          : pending as List<PendingMessage>,
+          : pending as IList<PendingMessage>,
       isLoading: isLoading == const $CopyWithPlaceholder() || isLoading == null
           ? _value.isLoading
           // ignore: cast_nullable_to_non_nullable

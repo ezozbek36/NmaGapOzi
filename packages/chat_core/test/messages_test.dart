@@ -1,5 +1,6 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:chat_core/chat_core.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:provider_api/provider_api.dart';
 import 'package:test/test.dart';
@@ -84,7 +85,7 @@ void main() {
       },
       seed: () => MessageListState(
         conversationId: 'c1',
-        items: [_message(id: 'm1', conversationId: 'c1', text: 'newer')],
+        items: [_message(id: 'm1', conversationId: 'c1', text: 'newer')].lock,
         hasMore: true,
       ),
       act: (bloc) => bloc.add(MessageListLoadEarlier()),
@@ -102,8 +103,8 @@ void main() {
       build: () => MessageListBloc(conversationId: 'c1', provider: mockProvider, sendUseCase: mockSendUseCase),
       seed: () => MessageListState(
         conversationId: 'c1',
-        items: [_message(id: 'tmp-1', conversationId: 'c1', text: 'hello', status: MessageStatus.sending, clientId: 'client-1')],
-        pending: const [PendingMessage(clientId: 'client-1', text: 'hello', status: MessageStatus.sending)],
+        items: [_message(id: 'tmp-1', conversationId: 'c1', text: 'hello', status: MessageStatus.sending, clientId: 'client-1')].lock,
+        pending: const [PendingMessage(clientId: 'client-1', text: 'hello', status: MessageStatus.sending)].lock,
       ),
       act: (bloc) {
         bloc.add(
@@ -126,6 +127,34 @@ void main() {
             .having((s) => s.items.first.id, 'message id', 'server-1')
             .having((s) => s.items.first.status, 'status', MessageStatus.sent)
             .having((s) => s.pending, 'pending', isEmpty),
+      ],
+    );
+
+    blocTest<MessageListBloc, MessageListState>(
+      'retry inserts missing pending item by message order',
+      build: () {
+        when(() => mockSendUseCase.retry('client-retry', 'c1', 'retry')).thenAnswer((_) async {});
+
+        return MessageListBloc(conversationId: 'c1', provider: mockProvider, sendUseCase: mockSendUseCase);
+      },
+      seed: () => MessageListState(
+        conversationId: 'c1',
+        items: [
+          _message(id: 'tmp-new', conversationId: 'c1', text: 'new', status: MessageStatus.sending, clientId: 'client-new'),
+          _message(id: 'tmp-retry', conversationId: 'c1', text: 'retry', status: MessageStatus.failed, clientId: 'client-retry'),
+          _message(id: 'tmp-old', conversationId: 'c1', text: 'old', status: MessageStatus.failed, clientId: 'client-old'),
+        ].lock,
+        pending: const [
+          PendingMessage(clientId: 'client-new', text: 'new', status: MessageStatus.sending),
+          PendingMessage(clientId: 'client-old', text: 'old', status: MessageStatus.failed),
+        ].lock,
+      ),
+      act: (bloc) => bloc.add(const MessageListRetryMessage('client-retry')),
+      expect: () => [
+        isA<MessageListState>()
+            .having((s) => s.pending.map((p) => p.clientId).toList(), 'pending order', ['client-new', 'client-retry', 'client-old'])
+            .having((s) => s.pending[1].status, 'retry status', MessageStatus.sending)
+            .having((s) => s.pending[1].retryCount, 'retry count', 1),
       ],
     );
   });

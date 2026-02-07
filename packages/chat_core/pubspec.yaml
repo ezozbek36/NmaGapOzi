@@ -22,6 +22,7 @@ dependencies:
   flutter_riverpod: ^3.2.1
   equatable: ^2.0.8
   copy_with_extension: ^11.0.0
+  fast_immutable_collections: ^11.1.0
   meta: ^1.8.0
   rxdart: ^0.28.0
   uuid: ^4.0.0

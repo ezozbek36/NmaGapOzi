@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:fast_immutable_collections/fast_immutable_collections.dart';
 import 'package:provider_api/provider_api.dart';
 import 'package:uuid/uuid.dart';
 import 'message_list_state.dart';
@@ -74,7 +75,7 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     emit(state.copyWith(isLoading: true, error: null));
     try {
       final page = await _provider.listMessages(conversationId: state.conversationId, limit: 20);
-      emit(state.copyWith(items: page.items, isLoading: false, hasMore: page.hasMore));
+      emit(state.copyWith(items: page.items.lock, isLoading: false, hasMore: page.hasMore));
     } catch (e) {
       emit(state.copyWith(isLoading: false, error: e.toString()));
     }
@@ -89,7 +90,7 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
 
       final page = await _provider.listMessages(conversationId: state.conversationId, beforeMessageId: lastMsg.id, limit: 20);
 
-      emit(state.copyWith(items: [...state.items, ...page.items], isLoadingMore: false, hasMore: page.hasMore));
+      emit(state.copyWith(items: state.items.addAll(page.items), isLoadingMore: false, hasMore: page.hasMore));
     } catch (e) {
       emit(state.copyWith(isLoadingMore: false, error: e.toString()));
     }
@@ -103,11 +104,9 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     final pending = clientId == null ? state.pending : _removePending(state.pending, clientId);
 
     if (existingIndex != -1) {
-      final newItems = List<Message>.from(state.items);
-      newItems[existingIndex] = event.message;
-      emit(state.copyWith(items: newItems, pending: pending));
+      emit(state.copyWith(items: state.items.replace(existingIndex, event.message), pending: pending));
     } else {
-      emit(state.copyWith(items: [event.message, ...state.items], pending: pending));
+      emit(state.copyWith(items: state.items.insert(0, event.message), pending: pending));
     }
   }
 
@@ -125,7 +124,7 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     );
     final pendingMessage = PendingMessage(clientId: clientId, text: event.text, status: MessageStatus.sending);
 
-    emit(state.copyWith(items: [message, ...state.items], pending: [pendingMessage, ...state.pending]));
+    emit(state.copyWith(items: state.items.insert(0, message), pending: state.pending.insert(0, pendingMessage)));
 
     try {
       await _sendUseCase.send(conversationId: state.conversationId, text: event.text, clientId: clientId);
@@ -138,9 +137,8 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     final index = state.items.indexWhere((m) => m.clientId == event.clientId);
     final pending = _removePending(state.pending, event.clientId);
     if (index != -1) {
-      final newItems = List<Message>.from(state.items);
-      newItems[index] = newItems[index].copyWith(status: MessageStatus.sent, id: event.messageId);
-      emit(state.copyWith(items: newItems, pending: pending));
+      final updatedMessage = state.items[index].copyWith(status: MessageStatus.sent, id: event.messageId);
+      emit(state.copyWith(items: state.items.replace(index, updatedMessage), pending: pending));
       return;
     }
     emit(state.copyWith(pending: pending));
@@ -150,17 +148,15 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     final messageIndex = state.items.indexWhere((m) => m.clientId == event.clientId);
     final pendingIndex = state.pending.indexWhere((m) => m.clientId == event.clientId);
 
-    final newItems = List<Message>.from(state.items);
-    if (messageIndex != -1) {
-      newItems[messageIndex] = newItems[messageIndex].copyWith(status: MessageStatus.failed);
-    }
+    final updatedItems = messageIndex == -1
+        ? state.items
+        : state.items.replace(messageIndex, state.items[messageIndex].copyWith(status: MessageStatus.failed));
 
-    final newPending = List<PendingMessage>.from(state.pending);
-    if (pendingIndex != -1) {
-      newPending[pendingIndex] = newPending[pendingIndex].copyWith(status: MessageStatus.failed, error: event.error);
-    }
+    final updatedPending = pendingIndex == -1
+        ? state.pending
+        : state.pending.replace(pendingIndex, state.pending[pendingIndex].copyWith(status: MessageStatus.failed, error: event.error));
 
-    emit(state.copyWith(items: newItems, pending: newPending));
+    emit(state.copyWith(items: updatedItems, pending: updatedPending));
   }
 
   Future<void> _onRetryMessage(MessageListRetryMessage event, Emitter<MessageListState> emit) async {
@@ -168,22 +164,26 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     if (messageIndex == -1) return;
 
     final msg = state.items[messageIndex];
-    final newItems = List<Message>.from(state.items);
-    newItems[messageIndex] = msg.copyWith(status: MessageStatus.sending);
+    final updatedItems = state.items.replace(messageIndex, msg.copyWith(status: MessageStatus.sending));
 
     final pendingIndex = state.pending.indexWhere((m) => m.clientId == event.clientId);
-    final newPending = List<PendingMessage>.from(state.pending);
-    if (pendingIndex != -1) {
-      newPending[pendingIndex] = newPending[pendingIndex].copyWith(
-        status: MessageStatus.sending,
-        retryCount: newPending[pendingIndex].retryCount + 1,
-        error: null,
-      );
-    } else {
-      newPending.insert(0, PendingMessage(clientId: event.clientId, text: msg.text, status: MessageStatus.sending, retryCount: 1));
-    }
+    final updatedPending = pendingIndex == -1
+        ? _insertPendingByMessageOrder(
+            pending: state.pending,
+            items: state.items,
+            messageIndex: messageIndex,
+            message: PendingMessage(clientId: event.clientId, text: msg.text, status: MessageStatus.sending, retryCount: 1),
+          )
+        : state.pending.replace(
+            pendingIndex,
+            state.pending[pendingIndex].copyWith(
+              status: MessageStatus.sending,
+              retryCount: state.pending[pendingIndex].retryCount + 1,
+              error: null,
+            ),
+          );
 
-    emit(state.copyWith(items: newItems, pending: newPending));
+    emit(state.copyWith(items: updatedItems, pending: updatedPending));
 
     try {
       await _sendUseCase.retry(event.clientId, msg.conversationId, msg.text);
@@ -192,7 +192,26 @@ class MessageListBloc extends Bloc<MessageListEvent, MessageListState> {
     }
   }
 
-  List<PendingMessage> _removePending(List<PendingMessage> pending, String clientId) {
-    return pending.where((m) => m.clientId != clientId).toList();
+  IList<PendingMessage> _removePending(IList<PendingMessage> pending, String clientId) {
+    return pending.where((m) => m.clientId != clientId).toIList();
+  }
+
+  IList<PendingMessage> _insertPendingByMessageOrder({
+    required IList<PendingMessage> pending,
+    required IList<Message> items,
+    required int messageIndex,
+    required PendingMessage message,
+  }) {
+    var insertAt = pending.length;
+
+    for (var i = 0; i < pending.length; i++) {
+      final currentIndex = items.indexWhere((m) => m.clientId == pending[i].clientId);
+      if (currentIndex != -1 && currentIndex > messageIndex) {
+        insertAt = i;
+        break;
+      }
+    }
+
+    return pending.insert(insertAt, message);
   }
 }
