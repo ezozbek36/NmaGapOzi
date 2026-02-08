@@ -718,6 +718,7 @@ dependencies = [
  "glutin",
  "glutin-winit",
  "raw-window-handle",
+ "shlex",
  "winit",
 ]
 

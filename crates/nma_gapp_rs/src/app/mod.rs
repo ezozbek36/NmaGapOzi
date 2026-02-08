@@ -4,6 +4,7 @@
 
 mod config;
 mod engine;
+mod keyboard;
 
 use glutin::{
     config::{ConfigTemplateBuilder, GlConfig},
@@ -16,7 +17,11 @@ use glutin_winit::DisplayBuilder;
 use raw_window_handle::HasWindowHandle;
 use std::{num::NonZeroU32, sync::Mutex};
 use winit::{
-    application::ApplicationHandler, dpi::PhysicalSize, event::WindowEvent, window::Window,
+    application::ApplicationHandler,
+    dpi::{PhysicalPosition, PhysicalSize},
+    event::{ElementState, KeyEvent, Modifiers, MouseButton, MouseScrollDelta, WindowEvent},
+    keyboard::ModifiersState,
+    window::Window,
 };
 
 use crate::{app::engine::Engine, gl_context::GlRenderContext};
@@ -30,6 +35,15 @@ pub struct App {
     render_context: Option<Box<GlRenderContext>>,
     /// Handle to the running Flutter Engine instance.
     engine: Option<Engine>,
+    modifiers_state: ModifiersState,
+}
+
+impl Drop for App {
+    fn drop(&mut self) {
+        self.engine.take();
+        self.render_context.take();
+        self.window.take();
+    }
 }
 
 impl ApplicationHandler for App {
@@ -59,6 +73,8 @@ impl ApplicationHandler for App {
             size.height as usize,
             scale_factor,
         );
+
+        self.engine.as_ref().unwrap().send_view_focus(true);
     }
 
     fn window_event(
@@ -71,13 +87,57 @@ impl ApplicationHandler for App {
             WindowEvent::CloseRequested => {
                 event_loop.exit();
             }
+            WindowEvent::RedrawRequested => {
+                self.handle_redraw();
+            }
             WindowEvent::Resized(size) => self.handle_resize(size),
+            WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                self.handle_scale_factor(scale_factor)
+            }
+            WindowEvent::Focused(focused) => self.handle_focus(focused),
+            WindowEvent::CursorEntered { .. } => self.handle_cursor_entered(),
+            WindowEvent::CursorLeft { .. } => self.handle_cursor_left(),
+            WindowEvent::CursorMoved { position, .. } => self.handle_cursor_moved(position),
+            WindowEvent::MouseInput { state, button, .. } => self.handle_mouse_input(state, button),
+            WindowEvent::MouseWheel { delta, .. } => self.handle_mouse_wheel(delta),
+            WindowEvent::KeyboardInput { event, .. } => self.handle_keyboard_input(event),
+            WindowEvent::ModifiersChanged(state) => self.handle_modifiers_changed(state),
             _ => (),
         }
     }
 }
 
 impl App {
+    fn handle_modifiers_changed(&mut self, state: Modifiers) {
+        self.modifiers_state = state.state();
+    }
+
+    fn handle_redraw(&self) {
+        if let Some(engine) = &self.engine {
+            engine.schedule_frame();
+        }
+    }
+
+    fn handle_keyboard_input(&self, event: KeyEvent) {
+        if let Some(engine) = &self.engine {
+            let prepared = keyboard::prepare_key_event(&event, Engine::current_time_micros());
+            engine.send_key_event(&prepared.event);
+        }
+    }
+
+    fn handle_focus(&self, focused: bool) {
+        if let Some(engine) = &self.engine {
+            engine.send_view_focus(focused);
+        }
+    }
+
+    fn handle_scale_factor(&self, scale_factor: f64) {
+        if let (Some(window), Some(engine)) = (&self.window, &self.engine) {
+            let size = window.inner_size();
+            engine.send_metrics(size.width as usize, size.height as usize, scale_factor);
+        }
+    }
+
     fn handle_resize(&mut self, size: PhysicalSize<u32>) {
         if let (Some(ctx), Some(window), Some(engine)) =
             (&self.render_context, &self.window, &self.engine)
@@ -97,6 +157,36 @@ impl App {
                 size.height as usize,
                 window.scale_factor(),
             );
+        }
+    }
+
+    fn handle_cursor_entered(&mut self) {
+        if let Some(engine) = self.engine.as_mut() {
+            engine.handle_cursor_entered();
+        }
+    }
+
+    fn handle_cursor_left(&mut self) {
+        if let Some(engine) = self.engine.as_mut() {
+            engine.handle_cursor_left();
+        }
+    }
+
+    fn handle_cursor_moved(&mut self, position: PhysicalPosition<f64>) {
+        if let Some(engine) = self.engine.as_mut() {
+            engine.handle_cursor_moved(position.x, position.y);
+        }
+    }
+
+    fn handle_mouse_input(&mut self, state: ElementState, button: MouseButton) {
+        if let Some(engine) = self.engine.as_mut() {
+            engine.handle_mouse_input(state, button);
+        }
+    }
+
+    fn handle_mouse_wheel(&mut self, delta: MouseScrollDelta) {
+        if let Some(engine) = self.engine.as_mut() {
+            engine.handle_mouse_wheel(delta);
         }
     }
 
