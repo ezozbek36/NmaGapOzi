@@ -197,4 +197,4 @@ AI tooling will likely continue to be used throughout all phases.
 
 ## License
 
-TBD (will be open-source).
+This project is licensed under the GNU Affero General Public License v3 (AGPLv3). See [LICENSE](./LICENSE) for details.
