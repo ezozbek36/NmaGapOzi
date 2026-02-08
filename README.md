@@ -1,91 +1,200 @@
-# NmaGapOZi
+# [WIP] NmaGapOZi
 
-NmaGapOZi is a config-first, modular chat application framework built with Flutter and Dart. It emphasizes flexibility through a decoupled architecture and a robust configuration system.
+> **A modular, desktop-first chat client shell.
+> Built like LEGO. Config-first. Provider-agnostic.**
 
-## Project Overview
+⚠️ **Work in Progress**
+This project is in an early experimental stage.
+APIs will change. Things may break. Expect rough edges.
 
-Phase 0 Goals:
-- **Config-first Architecture:** Centralized YAML configuration for UI, behavior, and providers.
-- **Mock Provider:** A deterministic mock provider for rapid development and testing without a real backend.
-- **Modular Monorepo:** Clearly separated packages for core logic, UI components, and API definitions.
+🤖 **AI-assisted development**
+This project is actively developed with the help of AI coding agents (e.g. OpenCode and similar tools).
+Architecture, boilerplate, and iterations may be partially AI-generated and then reviewed/refined by a human.
 
-## Quick Start
+---
 
-<details>
-<summary><b>Prerequisites</b></summary>
+## What is this?
 
-This project uses [Nix Flakes](https://nixos.wiki/wiki/Flakes) to manage the development environment. 
+NmaGapOZi is a **desktop chat client platform**, not “just another messenger”.
 
-If you have Nix installed with flakes enabled, you can simply run:
-```bash
-nix develop
-```
-This will provide the Flutter SDK, Dart, Melos, and all necessary dependencies.
+It is designed as a **customizable shell** where:
 
-Alternatively, you can manually install:
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (latest stable version recommended)
-- [Melos](https://melos.invertase.dev/getting-started) (`dart pub global activate melos`)
-</details>
+* the UI layout is **config-driven**,
+* the core logic is **provider-agnostic**,
+* and future extensions are built as **isolated components**, not forks.
 
-### Setup
+Think **IDE-like workflows**, not a locked-down chat app.
 
-1.  **Bootstrap the monorepo:**
-    ```bash
-    melos bootstrap
-    ```
+This is also an experiment in **human + AI collaborative software development**,
+exploring how far complex system architecture can be pushed with AI-assisted workflows.
 
-2.  **Run the desktop application:**
-    ```bash
-    cd apps/nma_gapp
-    flutter run -d linux
-    ```
+---
 
-## Architecture
+## What this project is *not*
 
-The project is organized into several packages:
+* ❌ Not a Telegram fork
+* ❌ Not a mobile-first app
+* ❌ Not a feature-stuffed “mod client”
+* ❌ Not focused on end-users (yet)
 
-- `packages/config_core`: Handles loading, merging, and validating the application configuration.
-- `packages/chat_core`: Contains the core business logic, including BLoCs and use cases for chat functionality.
-- `packages/provider_api`: Defines the interfaces and data models for chat providers.
-- `packages/provider_mock`: A deterministic mock implementation of the chat provider.
-- `packages/ui_kit`: A collection of reusable UI components and theme definitions.
-- `packages/app_shell`: Manages the overall application layout, command execution, and keybindings.
-- `apps/nma_gapp`: The main Flutter desktop application that wires everything together.
+This project targets **power users, developers, and system-oriented users** who care about control, structure, and composability.
 
-## Configuration
+---
 
-NmaGapOZi uses a YAML configuration file to control many aspects of the application.
+## Core ideas
 
-- **Location:** By default, the application looks for `config.yaml` in the user's config directory (e.g., `~/.config/nmagapozi/config.yaml` on Linux).
-- **Example:** See `config.example.yaml` in the root directory for a commented example.
-- **Hot Reload:** If `debug.enable_hot_reload_config` is set to `true`, the application will reload most settings when the configuration file is saved.
+### 1. Config-first UI
 
-## Mock Provider
+The interface is described declaratively:
 
-The mock provider allows you to simulate various backend behaviors.
+* layout (panels, splits, visibility)
+* themes and UI tokens
+* keybindings
+* commands
 
-- **Seed:** Change `provider.settings.seed` in your config to get a different set of generated data.
-- **Latency:** Adjust `latency_min_ms` and `latency_max_ms` to simulate network delay.
-- **Errors:** Set `failure_rate` (0.0 to 1.0) to simulate intermittent API failures.
+The UI is **assembled from configuration**, not hardcoded.
 
-## Keybindings
+---
 
-Default keybindings:
-- `Ctrl + P`: Open Command Palette
-- `Esc`: Close Command Palette / Go back
+### 2. Provider-agnostic core
 
-## Development
+The chat logic is abstracted behind a provider interface.
 
-### Verification Script
+Today:
 
-Run the following command to analyze, format, and test all packages:
+* a **deterministic mock provider** (for development and testing)
 
-```bash
-./tooling/scripts/verify_all.sh
-```
+Later (out of scope for now):
 
-### Dependency Policy
+* Telegram
+* Matrix
+* other protocols
 
-- Workspace-internal packages must be declared as `any` in `dependencies`.
-- Every direct dependency must be imported by source files under `lib/`, `bin/`, or `tool/`.
-- Run `melos run deps:hygiene` (or `./tooling/scripts/verify_all.sh`) to enforce this policy.
+The UI does not know *which* provider is used.
+
+---
+
+### 3. Desktop-first by design
+
+This project assumes:
+
+* keyboard-driven interaction
+* command palettes
+* resizable panels
+* multi-pane layouts
+
+Mobile support is **not a goal**.
+
+---
+
+### 4. Clear separation of concerns
+- **Rust** → primary application runtime, core logic, state machines, providers, lifecycle
+- **Flutter** → embedded UI layer (rendering, widgets, interaction)
+- **Embedder layer** → Rust-hosted Flutter engine, event-driven boundary
+
+Rust is the source of truth.  
+Flutter is treated as an embedded UI surface.
+
+---
+
+## Why does this exist?
+
+Because existing chat clients usually force you to choose between:
+
+* convenience **or**
+* control
+
+This project explores a third option:
+
+> **Chat as a configurable workspace**, not a fixed product.
+
+This project is also an experiment in building a **Rust-first reference architecture** using **AI-assisted engineering** as part of the development process.
+
+---
+
+## Who is this for?
+
+* developers
+* power users
+* Linux / Nix / Arch-style users
+* people who enjoy configuring their tools
+* contributors interested in UI architecture, state machines, and protocol abstraction
+
+If you’re looking for a polished daily driver — this is not it (yet).
+
+---
+
+## Tech stack
+
+- **Primary language:** Rust
+- **UI:** Flutter (embedded via Rust Flutter embedder)
+- **Architecture:** Rust-driven, event-based, config-first
+- **Repo:** monorepo (multiple packages, not a single app)
+
+Exact implementation details (especially embedder boundaries) may evolve.
+
+---
+
+## Current status (Phase 0)
+
+Implemented / in progress:
+
+* Monorepo setup
+* Config system (versioned, mergeable, hot-reload)
+* Abstract provider API
+* Deterministic mock provider
+* Desktop UI shell
+* Authentication flow (mock)
+* Chat list
+* Message list (with pagination)
+* Send message (optimistic + ack/fail simulation)
+* Debug / inspector tooling
+
+What is **not** implemented yet:
+
+* real chat providers
+* plugin system
+* sandboxing
+* persistence beyond mock data
+* production-grade security
+
+---
+
+## Contributing
+
+This project is **open-source and experimental**.
+
+Contributions are welcome, especially in:
+
+* architecture discussions
+* core abstractions
+* config and layout design
+* mock provider realism
+* documentation
+
+Contributors should be aware that:
+- parts of the codebase may be AI-generated,
+- clarity, reviewability, and correctness matter more than authorship,
+- refactoring AI-generated code is expected and encouraged.
+
+Before opening large PRs, please open an issue or discussion.
+
+---
+
+## Roadmap
+
+* Phase 0: shell + mock provider ✔️ / 🚧
+* Phase 1: stabilize core APIs
+* Phase 2: extension points (still without third-party plugins)
+* Phase 3: first real provider adapter
+* Phase X: plugin sandboxing & ecosystem (maybe)
+
+No deadlines. No promises.
+
+AI tooling will likely continue to be used throughout all phases.
+
+---
+
+## License
+
+TBD (will be open-source).
