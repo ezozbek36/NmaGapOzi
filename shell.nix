@@ -29,7 +29,7 @@ flake: {
     sysprof
   ];
 in
-  pkgs.mkShellNoCC rec {
+  pkgs.mkShell rec {
     nativeBuildInputs = with pkgs; [
       cmake
       ninja
