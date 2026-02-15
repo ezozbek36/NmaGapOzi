@@ -14,7 +14,7 @@ use glutin::{
     surface::{GlSurface, PbufferSurface, SurfaceAttributesBuilder, WindowSurface},
 };
 use glutin_winit::DisplayBuilder;
-use raw_window_handle::HasWindowHandle;
+use raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 use std::{num::NonZeroU32, sync::Mutex};
 use winit::{
     application::ApplicationHandler,

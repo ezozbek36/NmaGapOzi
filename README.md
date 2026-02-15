@@ -135,6 +135,36 @@ Exact implementation details (especially embedder boundaries) may evolve.
 
 ---
 
+## Nix (reproducible dev/build)
+
+This monorepo now uses a flake-first Nix setup for Linux (`x86_64-linux`).
+
+Quick start:
+
+```bash
+nix develop
+melos bootstrap
+```
+
+Build and checks:
+
+```bash
+nix flake check
+nix build .#nma-gapp-rs
+nix build .#nma-gapp-flutter-linux
+```
+
+Run app entrypoints:
+
+```bash
+nix run .#nma-gapp-rs
+nix run .#nma-gapp-flutter
+```
+
+Detailed flake documentation, migration notes, and troubleshooting are in `docs/nix-flake.md`.
+
+---
+
 ## Current status (Phase 0)
 
 Implemented / in progress:
